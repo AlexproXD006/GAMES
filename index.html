@@ -1,40 +1,1242 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Wordle</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <script src="js/app.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minijuegos Profesionales</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Variables y colores vibrantes */
+    :root {
+      --primary-color: #ffffff;
+      --secondary-color: #222222;
+      --accent-color: #ff6f61;
+      --accent-hover: #ff3b2e;
+      --bg-color: #1e1e1e;
+      --header-bg: linear-gradient(135deg, #ff6f61, #6b5b95);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: var(--bg-color);
+      color: var(--primary-color);
+      overflow-x: hidden;
+    }
+    header {
+      background: var(--header-bg);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    header h1 {
+      font-size: 28px;
+      margin: 0;
+      flex: 1;
+    }
+    /* Menú desplegable */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown button {
+      background: var(--accent-color);
+      border: none;
+      color: var(--primary-color);
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 0.3s;
+    }
+    .dropdown button:hover {
+      background: var(--accent-hover);
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: var(--secondary-color);
+      min-width: 200px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      z-index: 1001;
+    }
+    .dropdown-content a {
+      color: var(--primary-color);
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      transition: background 0.3s;
+    }
+    .dropdown-content a:hover {
+      background: var(--accent-color);
+    }
+    .dropdown.show .dropdown-content {
+      display: block;
+    }
+    /* Contenedor principal de juegos */
+    .game-container {
+      max-width: 960px;
+      margin: 20px auto;
+      background: var(--secondary-color);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    main > section {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    main > section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Estilos para los canvas: responsivos y centrados */
+    canvas {
+      width: 100%;
+      max-width: 800px;
+      background: #000;
+      border: 3px solid var(--accent-color);
+      border-radius: 4px;
+      display: block;
+      margin: 20px auto;
+    }
+    /* Controles */
+    .controls {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .controls button {
+      background: var(--accent-color);
+      border: none;
+      padding: 10px 20px;
+      color: var(--primary-color);
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 0.3s;
+    }
+    .controls button:hover {
+      background: var(--accent-hover);
+    }
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: var(--secondary-color);
+      box-shadow: var(--shadow);
+      margin-top: 20px;
+    }
+    /* Estilos para juegos HTML (Simon, Memory, 2048, Connect Four) */
+    .grid {
+      display: grid;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+    .card, .cell2048, .cf-cell {
+      background: var(--accent-color);
+      border: 2px solid var(--accent-hover);
+      border-radius: 4px;
+      text-align: center;
+      line-height: 50px;
+      font-size: 20px;
+      user-select: none;
+      cursor: pointer;
+    }
+    .card.flipped, .card.matched {
+      background: var(--accent-hover);
+    }
+  </style>
 </head>
 <body>
-    <section id="contenedor">
-        <div id="titulo">
-            <h1>WordleDAM</h1>
-        </div>
-        <div id="mensaje"></div>
-        <div id="casillas">
-            <!--
-            <div id="fila1">
-                <div id="casilla_1_1" class="casilla"></div>
-                <div id="casilla_2_1" class="casilla"></div>
-                <div id="casilla_3_1" class="casilla"></div>
-                <div id="casilla_4_1" class="casilla"></div>
-                <div id="casilla_5_1" class="casilla"></div>
-            </div>                
-            -->
-        </div>
-        <div id="formulario">
-            <div>
-                <input type="text" size="1" maxlength="1" class="casilla letra" id="c1">
-                <input type="text" size="1" maxlength="1" class="casilla letra" id="c2">
-                <input type="text" size="1" maxlength="1" class="casilla letra" id="c3">
-                <input type="text" size="1" maxlength="1" class="casilla letra" id="c4">
-                <input type="text" size="1" maxlength="1" class="casilla letra" id="c5">
-            </div>
-            <div>
-                <button class="casilla" id="enviar">Enviar</button>                
-            </div>
-        </div>
+  <header>
+    <h1>Minijuegos Profesionales</h1>
+    <div class="dropdown" id="gameDropdown">
+      <button id="dropdownButton">Selecciona un Juego</button>
+      <div class="dropdown-content">
+        <a href="#" data-game="home">Inicio</a>
+        <a href="#" data-game="spaceinvaders">Space Invaders</a>
+        <a href="#" data-game="tetris">Tetris</a>
+        <a href="#" data-game="flappybird">Flappy Bird</a>
+        <a href="#" data-game="angrybirds">Angry Birds</a>
+        <a href="#" data-game="breakout">Breakout</a>
+        <a href="#" data-game="snake">Snake</a>
+        <a href="#" data-game="pong">Pong</a>
+        <a href="#" data-game="pacman">Pac-Man</a>
+        <a href="#" data-game="simonsays">Simon Says</a>
+        <a href="#" data-game="memorygame">Memory Game</a>
+        <a href="#" data-game="connectfour">Connect Four</a>
+        <a href="#" data-game="minesweeper">Minesweeper</a>
+        <a href="#" data-game="game2048">2048</a>
+        <a href="#" data-game="whackamole">Whack-A-Mole</a>
+        <a href="#" data-game="asteroids">Asteroids</a>
+      </div>
+    </div>
+  </header>
+  <main>
+    <!-- Sección Inicio -->
+    <section id="home" class="active">
+      <div class="game-container">
+        <h2>Bienvenido</h2>
+        <p>Selecciona un juego del menú desplegable para comenzar.</p>
+      </div>
     </section>
+
+    <!-- 1. Space Invaders -->
+    <section id="spaceinvaders">
+      <div class="game-container">
+        <h2>Space Invaders</h2>
+        <canvas id="spaceInvadersCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+          <button id="si-restart">Reiniciar Space Invaders</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Tetris -->
+    <section id="tetris">
+      <div class="game-container">
+        <h2>Tetris</h2>
+        <canvas id="tetrisCanvas" width="400" height="800"></canvas>
+        <div class="controls">
+          <button id="tetris-restart">Reiniciar Tetris</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Flappy Bird -->
+    <section id="flappybird">
+      <div class="game-container">
+        <h2>Flappy Bird</h2>
+        <canvas id="flappyCanvas" width="400" height="600"></canvas>
+        <div class="controls">
+          <button id="flappy-restart">Reiniciar Flappy Bird</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Angry Birds -->
+    <section id="angrybirds">
+      <div class="game-container">
+        <h2>Angry Birds</h2>
+        <canvas id="angryCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+          <button id="angry-restart">Reiniciar Angry Birds</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Breakout -->
+    <section id="breakout">
+      <div class="game-container">
+        <h2>Breakout</h2>
+        <canvas id="breakoutCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+          <button id="breakout-restart">Reiniciar Breakout</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Snake -->
+    <section id="snake">
+      <div class="game-container">
+        <h2>Snake</h2>
+        <canvas id="snakeCanvas" width="400" height="400"></canvas>
+        <div class="controls">
+          <button id="snake-restart">Reiniciar Snake</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Pong -->
+    <section id="pong">
+      <div class="game-container">
+        <h2>Pong</h2>
+        <canvas id="pongCanvas" width="600" height="400"></canvas>
+        <div class="controls">
+          <button id="pong-restart">Reiniciar Pong</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Pac-Man -->
+    <section id="pacman">
+      <div class="game-container">
+        <h2>Pac-Man</h2>
+        <canvas id="pacmanCanvas" width="600" height="400"></canvas>
+        <div class="controls">
+          <button id="pacman-restart">Reiniciar Pac-Man</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Simon Says -->
+    <section id="simonsays">
+      <div class="game-container">
+        <h2>Simon Says</h2>
+        <div id="simonContainer" class="grid" style="grid-template-columns: repeat(2, 120px);">
+          <div id="simon1" style="background: red; width:120px; height:120px;"></div>
+          <div id="simon2" style="background: green; width:120px; height:120px;"></div>
+          <div id="simon3" style="background: blue; width:120px; height:120px;"></div>
+          <div id="simon4" style="background: yellow; width:120px; height:120px;"></div>
+        </div>
+        <div class="controls">
+          <button id="simon-restart">Reiniciar Simon Says</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Memory Game -->
+    <section id="memorygame">
+      <div class="game-container">
+        <h2>Memory Game</h2>
+        <div id="memoryGrid" class="grid" style="grid-template-columns: repeat(4, 100px);"></div>
+        <div class="controls">
+          <button id="memory-restart">Reiniciar Memory Game</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. Connect Four -->
+    <section id="connectfour">
+      <div class="game-container">
+        <h2>Connect Four</h2>
+        <canvas id="connectFourCanvas" width="600" height="500"></canvas>
+        <div class="controls">
+          <button id="cf-restart">Reiniciar Connect Four</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. Minesweeper -->
+    <section id="minesweeper">
+      <div class="game-container">
+        <h2>Minesweeper</h2>
+        <div id="minesweeperGrid" class="grid" style="grid-template-columns: repeat(10, 30px);"></div>
+        <div class="controls">
+          <button id="minesweeper-restart">Reiniciar Minesweeper</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13. 2048 -->
+    <section id="game2048">
+      <div class="game-container">
+        <h2>2048</h2>
+        <div id="grid2048" class="grid" style="grid-template-columns: repeat(4, 100px);"></div>
+        <div class="controls">
+          <button id="game2048-restart">Reiniciar 2048</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14. Whack-A-Mole -->
+    <section id="whackamole">
+      <div class="game-container">
+        <h2>Whack-A-Mole</h2>
+        <canvas id="whackCanvas" width="600" height="400"></canvas>
+        <div class="controls">
+          <button id="whack-restart">Reiniciar Whack-A-Mole</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15. Asteroids -->
+    <section id="asteroids">
+      <div class="game-container">
+        <h2>Asteroids</h2>
+        <canvas id="asteroidsCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+          <button id="asteroids-restart">Reiniciar Asteroids</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    &copy; 2025 Minijuegos Profesionales - Todos los derechos reservados.
+  </footer>
+
+  <script>
+    /* ─────────────────────────────
+       Funcionalidad del menú desplegable
+    ───────────────────────────── */
+    const dropdownButton = document.getElementById("dropdownButton");
+    const dropdown = document.getElementById("gameDropdown");
+    dropdownButton.addEventListener("click", () => {
+      dropdown.classList.toggle("show");
+    });
+    document.querySelectorAll(".dropdown-content a").forEach(item => {
+      item.addEventListener("click", e => {
+        e.preventDefault();
+        const gameId = item.getAttribute("data-game");
+        showSection(gameId);
+        dropdown.classList.remove("show");
+        dropdownButton.textContent = item.textContent;
+      });
+    });
+    function showSection(id) {
+      document.querySelectorAll("main > section").forEach(sec => {
+        sec.classList.toggle("active", sec.id === id);
+      });
+      if(window['init' + id]) window['init' + id]();
+    }
+
+    /* ─────────────────────────────
+       1. Space Invaders
+    ───────────────────────────── */
+    const siCanvas = document.getElementById("spaceInvadersCanvas");
+    const siCtx = siCanvas.getContext("2d");
+    const siRestartBtn = document.getElementById("si-restart");
+    let siGameRunning = false, siPlayer, siBullets, siAliens, siAlienDirection, siAlienSpeed, siLastTime;
+    const siPlayerSpeed = 5, siBulletSpeed = 7;
+    const siAlienRows = 4, siAlienCols = 10, siAlienPadding = 20, siAlienWidth = 40, siAlienHeight = 30;
+    const siAlienOffsetTop = 40, siAlienOffsetLeft = 60;
+    const siKeys = { ArrowLeft: false, ArrowRight: false, Space: false };
+    function initspaceinvaders() {
+      siGameRunning = true;
+      siPlayer = { x: siCanvas.width / 2 - 20, y: siCanvas.height - 50, width: 40, height: 20 };
+      siBullets = [];
+      siAliens = [];
+      siAlienDirection = 1;
+      siAlienSpeed = 0.5;
+      siLastTime = performance.now();
+      for (let row = 0; row < siAlienRows; row++) {
+        for (let col = 0; col < siAlienCols; col++) {
+          siAliens.push({
+            x: siAlienOffsetLeft + col * (siAlienWidth + siAlienPadding),
+            y: siAlienOffsetTop + row * (siAlienHeight + siAlienPadding),
+            width: siAlienWidth,
+            height: siAlienHeight,
+            alive: true
+          });
+        }
+      }
+      requestAnimationFrame(siGameLoop);
+    }
+    function siGameLoop(timestamp) {
+      if (!siGameRunning) return;
+      const deltaTime = timestamp - siLastTime;
+      siLastTime = timestamp;
+      if (siKeys.ArrowLeft && siPlayer.x > 0) siPlayer.x -= siPlayerSpeed;
+      if (siKeys.ArrowRight && siPlayer.x + siPlayer.width < siCanvas.width) siPlayer.x += siPlayerSpeed;
+      siBullets.forEach((b, i) => { b.y -= siBulletSpeed; if (b.y < 0) siBullets.splice(i, 1); });
+      let hitEdge = false;
+      siAliens.forEach(alien => {
+        if (!alien.alive) return;
+        alien.x += siAlienSpeed * siAlienDirection;
+        if (alien.x + alien.width >= siCanvas.width || alien.x <= 0) hitEdge = true;
+      });
+      if (hitEdge) {
+        siAlienDirection *= -1;
+        siAliens.forEach(alien => {
+          if (!alien.alive) return;
+          alien.y += 20;
+          if (alien.y + alien.height >= siPlayer.y) endSpaceInvaders(false);
+        });
+      }
+      siBullets.forEach((b, bi) => {
+        siAliens.forEach(alien => {
+          if (!alien.alive) return;
+          if (b.x < alien.x + alien.width && b.x + 4 > alien.x && b.y < alien.y + alien.height && b.y + 10 > alien.y) {
+            alien.alive = false;
+            siBullets.splice(bi, 1);
+          }
+        });
+      });
+      if (siAliens.every(a => !a.alive)) endSpaceInvaders(true);
+      siCtx.clearRect(0, 0, siCanvas.width, siCanvas.height);
+      siCtx.fillStyle = "#00ff00";
+      siCtx.fillRect(siPlayer.x, siPlayer.y, siPlayer.width, siPlayer.height);
+      siCtx.fillStyle = "#ffff00";
+      siBullets.forEach(b => siCtx.fillRect(b.x, b.y, 4, 10));
+      siCtx.fillStyle = "#ff0000";
+      siAliens.forEach(alien => { if (alien.alive) siCtx.fillRect(alien.x, alien.y, alien.width, alien.height); });
+      requestAnimationFrame(siGameLoop);
+    }
+    function endSpaceInvaders(win) {
+      siGameRunning = false;
+      siCtx.fillStyle = "rgba(0,0,0,0.7)";
+      siCtx.fillRect(0, 0, siCanvas.width, siCanvas.height);
+      siCtx.fillStyle = "#fff";
+      siCtx.font = "40px Roboto";
+      siCtx.textAlign = "center";
+      siCtx.fillText(win ? "¡Has Ganado!" : "Game Over", siCanvas.width / 2, siCanvas.height / 2);
+    }
+    function siShoot() {
+      siBullets.push({ x: siPlayer.x + siPlayer.width / 2 - 2, y: siPlayer.y, width: 4, height: 10 });
+    }
+    window.addEventListener("keydown", e => {
+      if (e.code === "ArrowLeft" || e.code === "ArrowRight") siKeys[e.code] = true;
+      if (e.code === "Space") { if (!siKeys.Space) siShoot(); siKeys.Space = true; }
+    });
+    window.addEventListener("keyup", e => {
+      if (e.code === "ArrowLeft" || e.code === "ArrowRight") siKeys[e.code] = false;
+      if (e.code === "Space") siKeys.Space = false;
+    });
+    siRestartBtn.addEventListener("click", () => { siGameRunning = false; initspaceinvaders(); });
+
+    /* ─────────────────────────────
+       2. Tetris (versión simplificada)
+    ───────────────────────────── */
+    const tCanvas = document.getElementById("tetrisCanvas");
+    const tCtx = tCanvas.getContext("2d");
+    const tRestartBtn = document.getElementById("tetris-restart");
+    const tCOLS = 10, tROWS = 20, tBLOCK_SIZE = 40;
+    let tBoard = [], tCurrentPiece, tGameOver = false, tDropStart = Date.now();
+    const tPieces = "IJLOSTZ";
+    const tColors = { I: 'cyan', J: 'blue', L: 'orange', O: 'yellow', S: 'green', T: 'purple', Z: 'red' };
+    const tTetrominos = {
+      I: [[[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],[[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]]],
+      J: [[[1,0,0],[1,1,1],[0,0,0]],[[0,1,1],[0,1,0],[0,1,0]],[[0,0,0],[1,1,1],[0,0,1]],[[0,1,0],[0,1,0],[1,1,0]]],
+      L: [[[0,0,1],[1,1,1],[0,0,0]],[[0,1,0],[0,1,0],[0,1,1]],[[0,0,0],[1,1,1],[1,0,0]],[[1,1,0],[0,1,0],[0,1,0]]],
+      O: [[[1,1],[1,1]]],
+      S: [[[0,1,1],[1,1,0],[0,0,0]],[[0,1,0],[0,1,1],[0,0,1]]],
+      T: [[[0,1,0],[1,1,1],[0,0,0]],[[0,1,0],[0,1,1],[0,1,0]],[[0,0,0],[1,1,1],[0,1,0]],[[0,1,0],[1,1,0],[0,1,0]]],
+      Z: [[[1,1,0],[0,1,1],[0,0,0]],[[0,0,1],[0,1,1],[0,1,0]]]
+    };
+    function initTetrisBoard() {
+      tBoard = [];
+      for(let r=0; r<tROWS; r++){
+        tBoard[r] = [];
+        for(let c=0; c<tCOLS; c++){
+          tBoard[r][c] = '';
+        }
+      }
+    }
+    function drawSquare(x,y,color) {
+      tCtx.fillStyle = color;
+      tCtx.fillRect(x*tBLOCK_SIZE, y*tBLOCK_SIZE, tBLOCK_SIZE, tBLOCK_SIZE);
+      tCtx.strokeStyle = "#000";
+      tCtx.strokeRect(x*tBLOCK_SIZE, y*tBLOCK_SIZE, tBLOCK_SIZE, tBLOCK_SIZE);
+    }
+    function drawTetrisBoard() {
+      for(let r=0; r<tROWS; r++){
+        for(let c=0; c<tCOLS; c++){
+          drawSquare(c, r, tBoard[r][c] || 'black');
+        }
+      }
+    }
+    function randomTetrisPiece() {
+      const type = tPieces[Math.floor(Math.random()*tPieces.length)];
+      const rotations = tTetrominos[type];
+      return { type, shape: rotations[0], rotationIndex: 0, x: Math.floor(tCOLS/2)-Math.ceil(rotations[0][0].length/2), y: -1 };
+    }
+    function drawTetrisPiece(piece) {
+      for(let r=0; r<piece.shape.length; r++){
+        for(let c=0; c<piece.shape[r].length; c++){
+          if(piece.shape[r][c]) drawSquare(piece.x+c, piece.y+r, tColors[piece.type]);
+        }
+      }
+    }
+    function tetrisCollision(piece, offsetX, offsetY) {
+      for(let r=0; r<piece.shape.length; r++){
+        for(let c=0; c<piece.shape[r].length; c++){
+          if(piece.shape[r][c]){
+            let newX = piece.x + c + offsetX;
+            let newY = piece.y + r + offsetY;
+            if(newX<0 || newX>=tCOLS || newY>=tROWS) return true;
+            if(newY>=0 && tBoard[newY][newX]) return true;
+          }
+        }
+      }
+      return false;
+    }
+    function lockTetrisPiece() {
+      for(let r=0; r<tCurrentPiece.shape.length; r++){
+        for(let c=0; c<tCurrentPiece.shape[r].length; c++){
+          if(tCurrentPiece.shape[r][c]){
+            if(tCurrentPiece.y+r<0){ tGameOver = true; return; }
+            tBoard[tCurrentPiece.y+r][tCurrentPiece.x+c] = tColors[tCurrentPiece.type];
+          }
+        }
+      }
+      for(let r=0; r<tROWS; r++){
+        if(tBoard[r].every(cell=>cell)){
+          tBoard.splice(r,1);
+          tBoard.unshift(new Array(tCOLS).fill(''));
+        }
+      }
+    }
+    function rotateTetris(piece) {
+      const rotations = tTetrominos[piece.type];
+      let newRotationIndex = (piece.rotationIndex+1)%rotations.length;
+      return { ...piece, shape: rotations[newRotationIndex], rotationIndex: newRotationIndex };
+    }
+    function tetrisGameLoop() {
+      let now = Date.now();
+      if(now - tDropStart > 1000){
+        if(!tetrisCollision(tCurrentPiece, 0, 1)) tCurrentPiece.y++;
+        else { lockTetrisPiece(); if(tGameOver){ clearInterval(tetrisInterval); alert("Game Over Tetris"); return; } tCurrentPiece = randomTetrisPiece(); }
+        tDropStart = now;
+      }
+      tCtx.clearRect(0, 0, tCanvas.width, tCanvas.height);
+      drawTetrisBoard();
+      drawTetrisPiece(tCurrentPiece);
+    }
+    let tetrisInterval;
+    function inittetris() {
+      initTetrisBoard();
+      tGameOver = false;
+      tCurrentPiece = randomTetrisPiece();
+      clearInterval(tetrisInterval);
+      tetrisInterval = setInterval(tetrisGameLoop, 50);
+    }
+    tRestartBtn.addEventListener("click", inittetris);
+
+    /* ─────────────────────────────
+       3. Flappy Bird
+    ───────────────────────────── */
+    const fCanvas = document.getElementById("flappyCanvas");
+    const fCtx = fCanvas.getContext("2d");
+    const fRestartBtn = document.getElementById("flappy-restart");
+    let fGameOver = false, fBird, fPipes, fPipeGap = 120, fPipeWidth = 60, fGravity = 0.5, fJumpStrength = -8;
+    function initflappybird(){
+      fGameOver = false;
+      fBird = { x:50, y: fCanvas.height/2, radius:15, velocity:0 };
+      fPipes = [];
+      requestAnimationFrame(flappyGameLoop);
+    }
+    function flappyGameLoop(){
+      if(fGameOver)return;
+      fBird.velocity += fGravity;
+      fBird.y += fBird.velocity;
+      if(fBird.y+fBird.radius>fCanvas.height || fBird.y-fBird.radius<0){ fGameOver=true; alert("Game Over Flappy Bird"); }
+      if(fPipes.length===0 || fPipes[fPipes.length-1].x < fCanvas.width-200){
+        let gapY = Math.random()*(fCanvas.height - fPipeGap - 40)+20;
+        fPipes.push({ x: fCanvas.width, gapY });
+      }
+      fPipes.forEach(pipe=>{
+        pipe.x -=2;
+        if(fBird.x+fBird.radius>pipe.x && fBird.x-fBird.radius<pipe.x+fPipeWidth){
+          if(fBird.y-fBird.radius<pipe.gapY || fBird.y+fBird.radius>pipe.gapY+fPipeGap){ fGameOver=true; alert("Game Over Flappy Bird"); }
+        }
+      });
+      if(fPipes.length && fPipes[0].x+fPipeWidth<0) fPipes.shift();
+      fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
+      fCtx.fillStyle="#ff0";
+      fCtx.beginPath();
+      fCtx.arc(fBird.x, fBird.y, fBird.radius, 0, Math.PI*2);
+      fCtx.fill();
+      fCtx.fillStyle="#0f0";
+      fPipes.forEach(pipe=>{
+        fCtx.fillRect(pipe.x, 0, fPipeWidth, pipe.gapY);
+        fCtx.fillRect(pipe.x, pipe.gapY+fPipeGap, fPipeWidth, fCanvas.height-pipe.gapY-fPipeGap);
+      });
+      requestAnimationFrame(flappyGameLoop);
+    }
+    window.addEventListener("keydown", e=>{ if(e.code==="Space") fBird.velocity = fJumpStrength; });
+    fRestartBtn.addEventListener("click", initflappybird);
+
+    /* ─────────────────────────────
+       4. Angry Birds
+    ───────────────────────────── */
+    const aCanvas = document.getElementById("angryCanvas");
+    const aCtx = aCanvas.getContext("2d");
+    const aRestartBtn = document.getElementById("angry-restart");
+    let aGameOver=false, aBird, aLaunched=false, aTarget, aSlingshot = { x:150, y: aCanvas.height-100 };
+    function initangrybirds(){
+      aGameOver=false; aLaunched=false;
+      aBird = { x: aSlingshot.x, y: aSlingshot.y, radius:15, vx:0, vy:0 };
+      aTarget = { x: aCanvas.width-150, y: aCanvas.height-100, radius:20 };
+      aCanvas.addEventListener("mousedown", angryMouseDown);
+      aCanvas.addEventListener("mousemove", angryMouseMove);
+      aCanvas.addEventListener("mouseup", angryMouseUp);
+      requestAnimationFrame(angryGameLoop);
+    }
+    let aDragging = false;
+    function angryMouseDown(e){
+      const rect = aCanvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left, mouseY = e.clientY - rect.top;
+      if(Math.hypot(mouseX - aBird.x, mouseY - aBird.y) < aBird.radius+10) aDragging = true;
+    }
+    function angryMouseMove(e){
+      if(aDragging && !aLaunched){
+        const rect = aCanvas.getBoundingClientRect();
+        aBird.x = e.clientX - rect.left;
+        aBird.y = e.clientY - rect.top;
+      }
+    }
+    function angryMouseUp(e){
+      if(aDragging && !aLaunched){
+        aDragging = false; aLaunched = true;
+        const dx = aSlingshot.x - aBird.x, dy = aSlingshot.y - aBird.y;
+        aBird.vx = dx/10; aBird.vy = dy/10;
+      }
+    }
+    function angryGameLoop(){
+      if(aGameOver)return;
+      if(aLaunched){ aBird.vy += 0.4; aBird.x += aBird.vx; aBird.y += aBird.vy;
+        if(aBird.y+aBird.radius > aCanvas.height){ aBird.y = aCanvas.height - aBird.radius; aBird.vy *= -0.5; }
+      }
+      if(Math.hypot(aBird.x - aTarget.x, aBird.y - aTarget.y) < aBird.radius+aTarget.radius){ aGameOver=true; alert("¡Has derribado el objetivo!"); }
+      aCtx.clearRect(0, 0, aCanvas.width, aCanvas.height);
+      aCtx.fillStyle="#654321"; aCtx.fillRect(aSlingshot.x-5, aSlingshot.y, 10, 50);
+      aCtx.fillStyle="#f00"; aCtx.beginPath(); aCtx.arc(aBird.x, aBird.y, aBird.radius, 0, Math.PI*2); aCtx.fill();
+      aCtx.fillStyle="#0f0"; aCtx.beginPath(); aCtx.arc(aTarget.x, aTarget.y, aTarget.radius, 0, Math.PI*2); aCtx.fill();
+      requestAnimationFrame(angryGameLoop);
+    }
+    aRestartBtn.addEventListener("click", initangrybirds);
+
+    /* ─────────────────────────────
+       5. Breakout
+    ───────────────────────────── */
+    const bCanvas = document.getElementById("breakoutCanvas");
+    const bCtx = bCanvas.getContext("2d");
+    const bRestartBtn = document.getElementById("breakout-restart");
+    let bPaddle, bBall, bBricks = [], bScore = 0, bGameOver = false;
+    const bPaddleWidth = 100, bPaddleHeight = 20, bBallRadius = 10;
+    function initbreakout(){
+      bGameOver = false; bScore = 0;
+      bPaddle = { x: (bCanvas.width - bPaddleWidth)/2, y: bCanvas.height - bPaddleHeight - 10, width: bPaddleWidth, height: bPaddleHeight, speed: 7 };
+      bBall = { x: bCanvas.width/2, y: bCanvas.height - bPaddleHeight - 20, vx:4, vy:-4, radius: bBallRadius };
+      bBricks = [];
+      const brickRowCount = 5, brickColumnCount = 8, brickWidth = 80, brickHeight = 30, brickPadding = 10, brickOffsetTop = 30, brickOffsetLeft = 30;
+      for(let r=0; r<brickRowCount; r++){
+        for(let c=0; c<brickColumnCount; c++){
+          bBricks.push({ x: brickOffsetLeft + c*(brickWidth+brickPadding), y: brickOffsetTop + r*(brickHeight+brickPadding), width: brickWidth, height: brickHeight, status: 1 });
+        }
+      }
+      requestAnimationFrame(breakoutGameLoop);
+    }
+    function breakoutGameLoop(){
+      if(bGameOver)return;
+      bBall.x += bBall.vx; bBall.y += bBall.vy;
+      if(bBall.x+bBall.radius > bCanvas.width || bBall.x-bBall.radius<0) bBall.vx = -bBall.vx;
+      if(bBall.y-bBall.radius<0) bBall.vy = -bBall.vy;
+      if(bBall.y+bBall.radius > bCanvas.height){ bGameOver = true; alert("Game Over Breakout"); }
+      if(bBall.x>bPaddle.x && bBall.x<bPaddle.x+bPaddle.width && bBall.y+bBall.radius> bPaddle.y) { bBall.vy = -bBall.vy; }
+      bBricks.forEach(brick=>{
+        if(brick.status){
+          if(bBall.x>brick.x && bBall.x<brick.x+brick.width && bBall.y-bBall.radius<brick.y+brick.height && bBall.y+bBall.radius>brick.y){
+            bBall.vy = -bBall.vy; brick.status=0; bScore++;
+          }
+        }
+      });
+      bCtx.clearRect(0, 0, bCanvas.width, bCanvas.height);
+      bCtx.fillStyle="#0095DD"; bCtx.fillRect(bPaddle.x, bPaddle.y, bPaddle.width, bPaddle.height);
+      bCtx.beginPath(); bCtx.arc(bBall.x, bBall.y, bBall.radius, 0, Math.PI*2); bCtx.fillStyle="#0095DD"; bCtx.fill();
+      bBricks.forEach(brick=>{ if(brick.status){ bCtx.fillStyle="#FF5733"; bCtx.fillRect(brick.x, brick.y, brick.width, brick.height); } });
+      bCtx.font = "16px Arial"; bCtx.fillStyle="#000"; bCtx.fillText("Score: "+bScore, 8,20);
+      requestAnimationFrame(breakoutGameLoop);
+    }
+    document.addEventListener("keydown", e=>{
+      if(e.code==="ArrowLeft" && bPaddle.x>0) bPaddle.x -= bPaddle.speed;
+      if(e.code==="ArrowRight" && bPaddle.x+bPaddle.width<bCanvas.width) bPaddle.x += bPaddle.speed;
+    });
+    bRestartBtn.addEventListener("click", initbreakout);
+
+    /* ─────────────────────────────
+       6. Snake
+    ───────────────────────────── */
+    const snakeCanvas = document.getElementById("snakeCanvas");
+    const snakeCtx = snakeCanvas.getContext("2d");
+    const snakeRestartBtn = document.getElementById("snake-restart");
+    let snakeGameOver = false, snakeInterval, snakeSpeed = 100;
+    let snake = [], snakeDirection = 'RIGHT', snakeFood = {};
+    function initSnake(){
+      snakeGameOver = false; snake = [{x:10, y:10}]; snakeDirection = 'RIGHT';
+      placeSnakeFood();
+      clearInterval(snakeInterval);
+      snakeInterval = setInterval(snakeGameLoop, snakeSpeed);
+    }
+    function snakeGameLoop(){
+      updateSnake();
+      drawSnake();
+    }
+    function updateSnake(){
+      const head = { ...snake[0] };
+      if(snakeDirection==='RIGHT') head.x++;
+      else if(snakeDirection==='LEFT') head.x--;
+      else if(snakeDirection==='UP') head.y--;
+      else if(snakeDirection==='DOWN') head.y++;
+      if(head.x<0 || head.y<0 || head.x*20>=snakeCanvas.width || head.y*20>=snakeCanvas.height || snake.some(segment=>segment.x===head.x && segment.y===head.y)){
+        clearInterval(snakeInterval); snakeGameOver = true; alert("Game Over Snake"); return;
+      }
+      snake.unshift(head);
+      if(head.x===snakeFood.x && head.y===snakeFood.y) placeSnakeFood();
+      else snake.pop();
+    }
+    function drawSnake(){
+      snakeCtx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+      snakeCtx.fillStyle = "green";
+      snake.forEach(segment=>{ snakeCtx.fillRect(segment.x*20, segment.y*20, 20, 20); });
+      snakeCtx.fillStyle = "red";
+      snakeCtx.fillRect(snakeFood.x*20, snakeFood.y*20, 20, 20);
+    }
+    function placeSnakeFood(){
+      snakeFood = { x: Math.floor(Math.random()*(snakeCanvas.width/20)), y: Math.floor(Math.random()*(snakeCanvas.height/20)) };
+    }
+    window.addEventListener("keydown", e=>{
+      if(e.code==="ArrowUp" && snakeDirection!=='DOWN') snakeDirection = 'UP';
+      else if(e.code==="ArrowDown" && snakeDirection!=='UP') snakeDirection = 'DOWN';
+      else if(e.code==="ArrowLeft" && snakeDirection!=='RIGHT') snakeDirection = 'LEFT';
+      else if(e.code==="ArrowRight" && snakeDirection!=='LEFT') snakeDirection = 'RIGHT';
+    });
+    snakeRestartBtn.addEventListener("click", initSnake);
+
+    /* ─────────────────────────────
+       7. Pong
+    ───────────────────────────── */
+    const pongCanvas = document.getElementById("pongCanvas");
+    const pongCtx = pongCanvas.getContext("2d");
+    const pongRestartBtn = document.getElementById("pong-restart");
+    let pongGameOver = false, pongBall, pongPlayer, pongAI;
+    function initPong(){
+      pongGameOver = false;
+      pongBall = { x: pongCanvas.width/2, y: pongCanvas.height/2, radius:8, vx:4, vy:4 };
+      pongPlayer = { x: 10, y: pongCanvas.height/2-40, width:10, height:80 };
+      pongAI = { x: pongCanvas.width-20, y: pongCanvas.height/2-40, width:10, height:80 };
+      requestAnimationFrame(pongGameLoop);
+    }
+    function pongGameLoop(){
+      if(pongGameOver)return;
+      pongBall.x += pongBall.vx; pongBall.y += pongBall.vy;
+      if(pongBall.y+pongBall.radius>pongCanvas.height || pongBall.y-pongBall.radius<0) pongBall.vy = -pongBall.vy;
+      if(pongBall.x - pongBall.radius < pongPlayer.x + pongPlayer.width &&
+         pongBall.y > pongPlayer.y && pongBall.y < pongPlayer.y + pongPlayer.height) { pongBall.vx = -pongBall.vx; }
+      if(pongBall.x + pongBall.radius > pongAI.x &&
+         pongBall.y > pongAI.y && pongBall.y < pongAI.y + pongAI.height) { pongBall.vx = -pongBall.vx; }
+      pongAI.y += (pongBall.y - (pongAI.y+pongAI.height/2))*0.1;
+      if(pongBall.x < 0 || pongBall.x > pongCanvas.width){ pongGameOver = true; alert("Game Over Pong"); }
+      pongCtx.clearRect(0, 0, pongCanvas.width, pongCanvas.height);
+      pongCtx.fillStyle = "#fff";
+      pongCtx.fillRect(pongPlayer.x, pongPlayer.y, pongPlayer.width, pongPlayer.height);
+      pongCtx.fillRect(pongAI.x, pongAI.y, pongAI.width, pongAI.height);
+      pongCtx.beginPath(); pongCtx.arc(pongBall.x, pongBall.y, pongBall.radius, 0, Math.PI*2); pongCtx.fill();
+      requestAnimationFrame(pongGameLoop);
+    }
+    window.addEventListener("keydown", e=>{
+      if(e.code==="ArrowUp" && pongPlayer.y>0) pongPlayer.y -= 20;
+      if(e.code==="ArrowDown" && pongPlayer.y+pongPlayer.height<pongCanvas.height) pongPlayer.y += 20;
+    });
+    pongRestartBtn.addEventListener("click", initPong);
+
+    /* ─────────────────────────────
+       8. Pac-Man
+    ───────────────────────────── */
+    const pacmanCanvas = document.getElementById("pacmanCanvas");
+    const pacmanCtx = pacmanCanvas.getContext("2d");
+    const pacmanRestartBtn = document.getElementById("pacman-restart");
+    let pacman, pacmanFood = [], pacmanGameOver = false;
+    function initpacman(){
+      pacmanGameOver = false;
+      pacman = { x: 50, y: 50, radius:15, speed:4, dir: {x:1,y:0} };
+      pacmanFood = [];
+      for(let i=0;i<20;i++){
+        pacmanFood.push({ x: Math.random()*(pacmanCanvas.width-20)+10, y: Math.random()*(pacmanCanvas.height-20)+10, eaten:false });
+      }
+      requestAnimationFrame(pacmanGameLoop);
+    }
+    function pacmanGameLoop(){
+      if(pacmanGameOver)return;
+      pacman.x += pacman.speed * pacman.dir.x;
+      pacman.y += pacman.speed * pacman.dir.y;
+      if(pacman.x < 0) pacman.x = pacmanCanvas.width;
+      if(pacman.x > pacmanCanvas.width) pacman.x = 0;
+      if(pacman.y < 0) pacman.y = pacmanCanvas.height;
+      if(pacman.y > pacmanCanvas.height) pacman.y = 0;
+      pacmanFood.forEach(f => {
+        if(!f.eaten && Math.hypot(pacman.x - f.x, pacman.y - f.y) < pacman.radius+5){
+          f.eaten = true;
+        }
+      });
+      if(pacmanFood.every(f=>f.eaten)){ pacmanGameOver = true; alert("¡Has comido toda la comida!"); }
+      pacmanCtx.clearRect(0, 0, pacmanCanvas.width, pacmanCanvas.height);
+      pacmanCtx.fillStyle = "yellow";
+      pacmanCtx.beginPath();
+      pacmanCtx.arc(pacman.x, pacman.y, pacman.radius, 0, Math.PI*2);
+      pacmanCtx.fill();
+      pacmanFood.forEach(f=>{
+        if(!f.eaten){
+          pacmanCtx.fillStyle = "white";
+          pacmanCtx.beginPath();
+          pacmanCtx.arc(f.x, f.y, 5, 0, Math.PI*2);
+          pacmanCtx.fill();
+        }
+      });
+      requestAnimationFrame(pacmanGameLoop);
+    }
+    window.addEventListener("keydown", e=>{
+      if(e.code==="ArrowUp") pacman.dir = {x:0,y:-1};
+      else if(e.code==="ArrowDown") pacman.dir = {x:0,y:1};
+      else if(e.code==="ArrowLeft") pacman.dir = {x:-1,y:0};
+      else if(e.code==="ArrowRight") pacman.dir = {x:1,y:0};
+    });
+    pacmanRestartBtn.addEventListener("click", initpacman);
+
+    /* ─────────────────────────────
+       9. Simon Says
+    ───────────────────────────── */
+    const simonButtons = [document.getElementById("simon1"), document.getElementById("simon2"), document.getElementById("simon3"), document.getElementById("simon4")];
+    const simonRestartBtn = document.getElementById("simon-restart");
+    let simonSequence = [], simonUser = [], simonRound = 0;
+    function initsimonsays(){
+      simonSequence = [];
+      simonUser = [];
+      simonRound = 0;
+      nextSimonRound();
+    }
+    function nextSimonRound(){
+      simonUser = [];
+      simonRound++;
+      simonSequence.push(Math.floor(Math.random()*4));
+      playSimonSequence();
+    }
+    function playSimonSequence(){
+      let i = 0;
+      const interval = setInterval(()=>{
+        const btn = simonButtons[simonSequence[i]];
+        btn.style.opacity = "0.3";
+        setTimeout(()=> { btn.style.opacity = "1"; }, 300);
+        i++;
+        if(i>=simonSequence.length) { clearInterval(interval); }
+      }, 600);
+    }
+    simonButtons.forEach((btn, index)=>{
+      btn.addEventListener("click", ()=>{
+        simonUser.push(index);
+        if(simonUser[simonUser.length-1] !== simonSequence[simonUser.length-1]){
+          alert("Error en la secuencia. Game Over Simon Says");
+        } else if(simonUser.length === simonSequence.length){
+          setTimeout(nextSimonRound, 1000);
+        }
+      });
+    });
+    simonRestartBtn.addEventListener("click", initsimonsays);
+
+    /* ─────────────────────────────
+       10. Memory Game
+    ───────────────────────────── */
+    const memoryGrid = document.getElementById("memoryGrid");
+    const memoryRestartBtn = document.getElementById("memory-restart");
+    let memoryCards = [], memoryFirst = null, memoryLock = false, memoryPairsFound = 0;
+    function initmemory(){
+      memoryGrid.innerHTML = "";
+      memoryCards = [];
+      memoryFirst = null;
+      memoryLock = false;
+      memoryPairsFound = 0;
+      const values = [1,1,2,2,3,3,4,4];
+      values.sort(() => Math.random()-0.5);
+      values.forEach(val=>{
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.value = val;
+        card.style.width = "100px"; card.style.height = "100px";
+        card.addEventListener("click", ()=> flipCard(card));
+        memoryGrid.appendChild(card);
+        memoryCards.push(card);
+      });
+    }
+    function flipCard(card){
+      if(memoryLock || card.classList.contains("flipped")) return;
+      card.classList.add("flipped");
+      card.textContent = card.dataset.value;
+      if(!memoryFirst) memoryFirst = card;
+      else{
+        memoryLock = true;
+        if(memoryFirst.dataset.value === card.dataset.value){
+          memoryFirst.classList.add("matched");
+          card.classList.add("matched");
+          memoryPairsFound++;
+          memoryFirst = null;
+          memoryLock = false;
+          if(memoryPairsFound===4) alert("¡Ganaste Memory Game!");
+        } else {
+          setTimeout(()=>{
+            memoryFirst.classList.remove("flipped"); memoryFirst.textContent = "";
+            card.classList.remove("flipped"); card.textContent = "";
+            memoryFirst = null;
+            memoryLock = false;
+          }, 800);
+        }
+      }
+    }
+    memoryRestartBtn.addEventListener("click", initmemory);
+
+    /* ─────────────────────────────
+       11. Connect Four
+    ───────────────────────────── */
+    const cfCanvas = document.getElementById("connectFourCanvas");
+    const cfCtx = cfCanvas.getContext("2d");
+    const cfRestartBtn = document.getElementById("cf-restart");
+    const cfCOLS = 7, cfROWS = 6, cfCELL_SIZE = 80;
+    let cfBoard = [], cfCurrentPlayer = 1, cfGameOver = false;
+    function initconnectfour(){
+      cfBoard = [];
+      for(let r=0;r<cfROWS;r++){
+        cfBoard[r] = new Array(cfCOLS).fill(0);
+      }
+      cfCurrentPlayer = 1;
+      cfGameOver = false;
+      cfCanvas.addEventListener("click", cfHandleClick);
+      drawConnectFour();
+    }
+    function cfHandleClick(e){
+      if(cfGameOver)return;
+      const rect = cfCanvas.getBoundingClientRect();
+      const col = Math.floor((e.clientX - rect.left)/cfCELL_SIZE);
+      for(let r=cfROWS-1; r>=0; r--){
+        if(cfBoard[r][col]===0){
+          cfBoard[r][col] = cfCurrentPlayer;
+          if(cfCheckWin(r, col)) { cfGameOver = true; alert("¡Jugador "+cfCurrentPlayer+" ha ganado Connect Four!"); }
+          cfCurrentPlayer = cfCurrentPlayer===1 ? 2 : 1;
+          drawConnectFour();
+          break;
+        }
+      }
+    }
+    function drawConnectFour(){
+      cfCtx.clearRect(0,0,cfCanvas.width, cfCanvas.height);
+      for(let r=0;r<cfROWS;r++){
+        for(let c=0;c<cfCOLS;c++){
+          cfCtx.fillStyle = "#0000ff";
+          cfCtx.fillRect(c*cfCELL_SIZE, r*cfCELL_SIZE, cfCELL_SIZE, cfCELL_SIZE);
+          cfCtx.beginPath();
+          cfCtx.arc(c*cfCELL_SIZE+cfCELL_SIZE/2, r*cfCELL_SIZE+cfCELL_SIZE/2, cfCELL_SIZE/2 - 10, 0, Math.PI*2);
+          cfCtx.fillStyle = cfBoard[r][c]===1 ? "red" : (cfBoard[r][c]===2 ? "yellow" : "white");
+          cfCtx.fill();
+        }
+      }
+    }
+    function cfCheckWin(row, col){ return false; }
+    cfRestartBtn.addEventListener("click", initconnectfour);
+
+    /* ─────────────────────────────
+       12. Minesweeper
+    ───────────────────────────── */
+    const msGrid = document.getElementById("minesweeperGrid");
+    const msRestartBtn = document.getElementById("minesweeper-restart");
+    let msBoard = [], msRows = 10, msCols = 10, msMines = 15;
+    function initminesweeper(){
+      msGrid.innerHTML = "";
+      msBoard = [];
+      for(let i=0;i<msRows;i++){
+        const row = [];
+        for(let j=0;j<msCols;j++){
+          const cell = { isMine: false, revealed: false, element: document.createElement("div") };
+          cell.element.className = "cell";
+          cell.element.style.width = "30px"; cell.element.style.height = "30px";
+          cell.element.addEventListener("click", ()=> revealMinesweeper(i, j));
+          msGrid.appendChild(cell.element);
+          row.push(cell);
+        }
+        msBoard.push(row);
+      }
+      let minesPlaced = 0;
+      while(minesPlaced < msMines){
+        const r = Math.floor(Math.random()*msRows), c = Math.floor(Math.random()*msCols);
+        if(!msBoard[r][c].isMine){ msBoard[r][c].isMine = true; minesPlaced++; }
+      }
+    }
+    function revealMinesweeper(r, c){
+      const cell = msBoard[r][c];
+      if(cell.revealed) return;
+      cell.revealed = true;
+      cell.element.style.background = "#e0e0e0";
+      if(cell.isMine){ cell.element.textContent = "💣"; alert("Game Over Minesweeper"); }
+      else {
+        let count = 0;
+        for(let i=-1;i<=1;i++){
+          for(let j=-1;j<=1;j++){
+            const nr = r+i, nc = c+j;
+            if(nr>=0 && nr<msRows && nc>=0 && nc<msCols && msBoard[nr][nc].isMine) count++;
+          }
+        }
+        if(count>0) cell.element.textContent = count;
+        else {
+          for(let i=-1;i<=1;i++){
+            for(let j=-1;j<=1;j++){
+              const nr = r+i, nc = c+j;
+              if(nr>=0 && nr<msRows && nc>=0 && nc<msCols) revealMinesweeper(nr, nc);
+            }
+          }
+        }
+      }
+    }
+    msRestartBtn.addEventListener("click", initminesweeper);
+
+    /* ─────────────────────────────
+       13. 2048
+    ───────────────────────────── */
+    const g2048 = document.getElementById("grid2048");
+    const g2048RestartBtn = document.getElementById("game2048-restart");
+    let board2048;
+    function init2048(){
+      board2048 = [];
+      g2048.innerHTML = "";
+      for(let r=0;r<4;r++){
+        board2048[r] = [];
+        for(let c=0;c<4;c++){
+          board2048[r][c] = 0;
+          const cell = document.createElement("div");
+          cell.className = "cell2048";
+          cell.style.width = "100px"; cell.style.height = "100px";
+          cell.style.lineHeight = "100px";
+          cell.style.fontSize = "24px";
+          cell.textContent = "";
+          g2048.appendChild(cell);
+        }
+      }
+      add2048Tile(); add2048Tile();
+      draw2048();
+    }
+    function add2048Tile(){
+      let empty = [];
+      for(let r=0;r<4;r++){
+        for(let c=0;c<4;c++){
+          if(board2048[r][c]===0) empty.push({r, c});
+        }
+      }
+      if(empty.length){
+        const spot = empty[Math.floor(Math.random()*empty.length)];
+        board2048[spot.r][spot.c] = Math.random() < 0.9 ? 2 : 4;
+      }
+    }
+    function draw2048(){
+      const cells = document.querySelectorAll(".cell2048");
+      let i = 0;
+      for(let r=0;r<4;r++){
+        for(let c=0;c<4;c++){
+          cells[i].textContent = board2048[r][c] === 0 ? "" : board2048[r][c];
+          i++;
+        }
+      }
+    }
+    window.addEventListener("keydown", e=>{
+      let moved = false;
+      if(e.code==="ArrowLeft"){
+        for(let r=0;r<4;r++){
+          for(let c=1;c<4;c++){
+            if(board2048[r][c]){
+              let k = c;
+              while(k > 0 && board2048[r][k-1] === 0){ board2048[r][k-1] = board2048[r][k]; board2048[r][k] = 0; k--; moved = true; }
+            }
+          }
+        }
+      }
+      // (Se pueden agregar movimientos para ArrowRight, ArrowUp y ArrowDown)
+      if(moved){ add2048Tile(); draw2048(); }
+    });
+    g2048RestartBtn.addEventListener("click", init2048);
+
+    /* ─────────────────────────────
+       14. Whack-A-Mole
+    ───────────────────────────── */
+    const whackCanvas = document.getElementById("whackCanvas");
+    const whackCtx = whackCanvas.getContext("2d");
+    const whackRestartBtn = document.getElementById("whack-restart");
+    let whackMoles = [], whackScore = 0, whackGameOver = false;
+    function initwhack(){
+      whackScore = 0; whackGameOver = false; whackMoles = [];
+      requestAnimationFrame(whackGameLoop);
+    }
+    function whackGameLoop(){
+      if(whackGameOver)return;
+      if(Math.random()<0.02) whackMoles.push({ x: Math.random()*(whackCanvas.width-50), y: Math.random()*(whackCanvas.height-50), time: Date.now() });
+      whackCtx.clearRect(0, 0, whackCanvas.width, whackCanvas.height);
+      whackMoles = whackMoles.filter(m => Date.now() - m.time < 1500);
+      whackMoles.forEach(m=>{
+        whackCtx.fillStyle = "brown";
+        whackCtx.beginPath();
+        whackCtx.arc(m.x, m.y, 20, 0, Math.PI*2);
+        whackCtx.fill();
+      });
+      requestAnimationFrame(whackGameLoop);
+    }
+    whackCanvas.addEventListener("click", e=>{
+      const rect = whackCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      whackMoles = whackMoles.filter(m=>{
+        if(Math.hypot(mx-m.x, my-m.y) < 20){ whackScore++; return false; }
+        return true;
+      });
+    });
+    whackRestartBtn.addEventListener("click", initwhack);
+
+    /* ─────────────────────────────
+       15. Asteroids
+    ───────────────────────────── */
+    const asteroidsCanvas = document.getElementById("asteroidsCanvas");
+    const asteroidsCtx = asteroidsCanvas.getContext("2d");
+    const asteroidsRestartBtn = document.getElementById("asteroids-restart");
+    let asteroidsGameOver = false, ship, asteroids = [], asteroidsBullets = [];
+    function initasteroids(){
+      asteroidsGameOver = false;
+      ship = { x: asteroidsCanvas.width/2, y: asteroidsCanvas.height/2, angle: 0, speed: 0 };
+      asteroids = [];
+      asteroidsBullets = [];
+      for(let i=0;i<5;i++){
+        asteroids.push({ x: Math.random()*asteroidsCanvas.width, y: Math.random()*asteroidsCanvas.height, r: 30, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2 });
+      }
+      requestAnimationFrame(asteroidsGameLoop);
+    }
+    function asteroidsGameLoop(){
+      if(asteroidsGameOver)return;
+      updateAsteroids();
+      drawAsteroids();
+      requestAnimationFrame(asteroidsGameLoop);
+    }
+    function updateAsteroids(){
+      ship.x += ship.speed * Math.cos(ship.angle);
+      ship.y += ship.speed * Math.sin(ship.angle);
+      if(ship.x < 0) ship.x = asteroidsCanvas.width;
+      if(ship.x > asteroidsCanvas.width) ship.x = 0;
+      if(ship.y < 0) ship.y = asteroidsCanvas.height;
+      if(ship.y > asteroidsCanvas.height) ship.y = 0;
+      asteroids.forEach(a=>{
+        a.x += a.vx; a.y += a.vy;
+        if(a.x < 0) a.x = asteroidsCanvas.width;
+        if(a.x > asteroidsCanvas.width) a.x = 0;
+        if(a.y < 0) a.y = asteroidsCanvas.height;
+        if(a.y > asteroidsCanvas.height) a.y = 0;
+      });
+    }
+    function drawAsteroids(){
+      asteroidsCtx.clearRect(0, 0, asteroidsCanvas.width, asteroidsCanvas.height);
+      asteroidsCtx.save();
+      asteroidsCtx.translate(ship.x, ship.y);
+      asteroidsCtx.rotate(ship.angle);
+      asteroidsCtx.fillStyle = "white";
+      asteroidsCtx.beginPath();
+      asteroidsCtx.moveTo(20, 0);
+      asteroidsCtx.lineTo(-10, 10);
+      asteroidsCtx.lineTo(-10, -10);
+      asteroidsCtx.closePath();
+      asteroidsCtx.fill();
+      asteroidsCtx.restore();
+      asteroidsCtx.fillStyle = "gray";
+      asteroids.forEach(a=>{
+        asteroidsCtx.beginPath();
+        asteroidsCtx.arc(a.x, a.y, a.r, 0, Math.PI*2);
+        asteroidsCtx.fill();
+      });
+    }
+    window.addEventListener("keydown", e=>{
+      if(e.code==="ArrowLeft") ship.angle -= 0.1;
+      if(e.code==="ArrowRight") ship.angle += 0.1;
+      if(e.code==="ArrowUp") ship.speed = 4;
+      if(e.code==="ArrowDown") ship.speed = 0;
+    });
+    asteroidsRestartBtn.addEventListener("click", initasteroids);
+  </script>
 </body>
 </html>
